@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using StudentManager.WebAPI.Data;
 using StudentManager.WebAPI.Data.Interfaces;
 using StudentManager.WebAPI.Data.Repositories;
+using StudentManager.WebAPI.Services.Entities;
+using StudentManager.WebAPI.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,8 +20,20 @@ builder.Services.AddAutoMapper(opt => { }, AppDomain.CurrentDomain.GetAssemblies
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Criamos uma nova política para o CORS para permitir que ele aceite as requisições do nosso frontend
+builder.Services.AddCors(o => o.AddPolicy("DefaultPolicy", builder =>
+{
+    builder.WithOrigins("http://localhost:3000", "http://localhost:5173")
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();
+}));
+
 builder.Services.AddScoped<IAlunoRepository, AlunoRepository>();
 builder.Services.AddScoped<IProfessorRepository, ProfessorRepository>();
+
+builder.Services.AddScoped<IAlunoService, AlunoService>();
+builder.Services.AddScoped<IProfessorService, ProfessorService>();
 
 var app = builder.Build();
 
@@ -31,6 +45,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Aplica a política criada acima
+app.UseCors("DefaultPolicy");
 
 app.UseAuthorization();
 
